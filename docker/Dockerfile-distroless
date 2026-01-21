@@ -1,6 +1,19 @@
 # This Dockerfile embeds a pre-built binary for the given Linux architecture
 # Binaries must be built using "./scripts/development/build-binaries.sh --docker-only"
 
+# Stage 1: Build Image
+FROM debian:bookworm-slim AS build-env
+
+# We use the standard distroless nonroot UID/GID
+# https://github.com/GoogleContainerTools/distroless/blob/80eb8fae559f4a99916da1f8c1445d56b2c637f2/common/variables.bzl#L18
+ARG UID=65532
+ARG GID=65532
+
+WORKDIR /app
+RUN mkdir -p /app/data && \
+    chown -R ${UID}:${GID} /app/data
+
+# Stage 2: Production Image
 FROM gcr.io/distroless/static-debian12:nonroot
 
 # TARGETARCH can be "amd64" or "arm64"
@@ -8,8 +21,10 @@ ARG TARGETARCH
 
 WORKDIR /app
 
-# UID & GID from https://github.com/GoogleContainerTools/distroless/blob/80eb8fae559f4a99916da1f8c1445d56b2c637f2/common/variables.bzl#L18
-COPY --chown=65532:65532 ./backend/.bin/pocket-id-linux-${TARGETARCH} /app/pocket-id
+# Copy the pre-created directory structure with nonroot ownership
+COPY --from=build-env /app/data /app/data
+
+COPY ./backend/.bin/pocket-id-linux-${TARGETARCH} /app/pocket-id
 
 EXPOSE 1411
 ENV APP_ENV=production

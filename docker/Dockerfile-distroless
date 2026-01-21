@@ -8,7 +8,8 @@ ARG TARGETARCH
 
 WORKDIR /app
 
-COPY ./backend/.bin/pocket-id-linux-${TARGETARCH} /app/pocket-id
+# UID & GID from https://github.com/GoogleContainerTools/distroless/blob/80eb8fae559f4a99916da1f8c1445d56b2c637f2/common/variables.bzl#L18
+COPY --chown=65532:65532 ./backend/.bin/pocket-id-linux-${TARGETARCH} /app/pocket-id
 
 EXPOSE 1411
 ENV APP_ENV=production

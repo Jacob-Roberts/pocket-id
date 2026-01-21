@@ -18,13 +18,15 @@ FROM gcr.io/distroless/static-debian12:nonroot
 
 # TARGETARCH can be "amd64" or "arm64"
 ARG TARGETARCH
+ARG UID=65532
+ARG GID=65532
 
 WORKDIR /app
 
 # Copy the pre-created directory structure with nonroot ownership
-COPY --from=build-env /app/data /app/data
+COPY --from=build-env --chown=${UID}:${GID} /app/data /app/data
 
-COPY ./backend/.bin/pocket-id-linux-${TARGETARCH} /app/pocket-id
+COPY --chown=${UID}:${GID} ./backend/.bin/pocket-id-linux-${TARGETARCH} /app/pocket-id
 
 EXPOSE 1411
 ENV APP_ENV=production
